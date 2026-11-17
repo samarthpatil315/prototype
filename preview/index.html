@@ -1,0 +1,437 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ORBITAL OFFICE — Interactive Preview</title>
+<style>
+  :root{
+    --forest:#073D2D; --deep:#0B513B; --ivory:#F5F0E5; --gold:#D5A044;
+    --white:#fff; --charcoal:#202A26; --grey:#F3F4F1; --muted:#6B7A72;
+    --radius:20px;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+  body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,Arial,sans-serif;background:#0c1f17;color:var(--charcoal)}
+  /* ---------- stage ---------- */
+  .stage{min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:28px 12px 40px;
+    background:radial-gradient(900px 500px at 15% -5%,rgba(213,160,68,.28),transparent 60%),
+               radial-gradient(800px 600px at 90% 10%,rgba(11,81,59,.55),transparent 60%),#0c1f17}
+  .stage-head{text-align:center;color:#fff;max-width:640px;margin-bottom:20px}
+  .stage-head h1{margin:0;font-size:clamp(24px,4vw,38px);letter-spacing:3px;font-weight:800}
+  .stage-head h1 span{color:var(--gold)}
+  .stage-head p{margin:8px 0 0;color:#cfe0d6;font-size:14px}
+  .badge{display:inline-block;margin-top:12px;padding:6px 14px;border:1px solid rgba(213,160,68,.6);
+    color:var(--gold);border-radius:999px;font-size:11px;font-weight:700;letter-spacing:1.5px}
+  /* ---------- phone ---------- */
+  .phone{width:min(400px,100%);height:min(820px,86vh);background:var(--ivory);border-radius:38px;
+    box-shadow:0 30px 80px rgba(0,0,0,.55),0 0 0 10px #12271f,0 0 0 12px #2c4a3c;overflow:hidden;
+    display:flex;flex-direction:column;position:relative}
+  .statusbar{background:var(--forest);color:#fff;display:flex;justify-content:space-between;
+    padding:10px 20px 6px;font-size:12px;font-weight:600}
+  .appbar{background:var(--forest);color:#fff;padding:8px 18px 16px;display:flex;align-items:center;gap:10px}
+  .logo{width:32px;height:32px;flex:0 0 auto;position:relative}
+  .logo .o{position:absolute;left:0;bottom:0;width:23px;height:23px;border:3.5px solid #fff;border-radius:6px}
+  .logo i{position:absolute;background:#fff;border-radius:2px}
+  .logo i:nth-child(2){width:5px;height:5px;right:5px;top:5px}
+  .logo i:nth-child(3){width:4px;height:4px;right:0;top:11px}
+  .logo i:nth-child(4){width:3.5px;height:3.5px;right:2px;top:0}
+  .appbar b{letter-spacing:2px;font-size:15px}
+  .appbar .sp{flex:1}
+  .iconbtn{background:rgba(255,255,255,.12);border:0;color:#fff;width:36px;height:36px;border-radius:50%;
+    font-size:17px;cursor:pointer;position:relative}
+  .iconbtn .dot{position:absolute;top:5px;right:6px;background:var(--gold);color:#073D2D;font-size:9px;
+    font-weight:800;border-radius:999px;padding:1px 5px}
+  /* ---------- screens ---------- */
+  .screens{flex:1;overflow-y:auto;scrollbar-width:none}
+  .screens::-webkit-scrollbar{display:none}
+  .screen{display:none;padding:16px 16px 24px;animation:fade .25s ease}
+  .screen.active{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  .demo-banner{background:rgba(213,160,68,.18);border:1px solid rgba(213,160,68,.55);color:#8a6414;
+    border-radius:12px;padding:8px 12px;font-size:11px;font-weight:700;margin-bottom:14px}
+  h2.greet{margin:2px 0 2px;font-size:22px;font-weight:800}
+  .sub{color:var(--muted);font-size:13px}
+  .sect{display:flex;justify-content:space-between;align-items:center;margin:20px 0 10px}
+  .sect h3{margin:0;font-size:16px;font-weight:800}
+  .sect button{background:none;border:0;color:var(--deep);font-weight:700;cursor:pointer;font-size:13px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+  .card{background:#fff;border:1px solid rgba(32,42,38,.07);border-radius:var(--radius);padding:14px}
+  .stat .ic{width:36px;height:36px;border-radius:10px;background:rgba(11,81,59,.12);display:grid;place-items:center;font-size:18px;margin-bottom:8px}
+  .stat .v{font-size:22px;font-weight:800}
+  .stat .l{font-size:12px;color:var(--muted)}
+  .card.tap{cursor:pointer;transition:transform .15s,box-shadow .15s}
+  .card.tap:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(7,61,45,.14)}
+  .chips{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{background:#fff;border:1px solid rgba(32,42,38,.12);border-radius:999px;padding:9px 13px;
+    font-size:13px;font-weight:600;cursor:pointer}
+  .chip:hover{border-color:var(--deep);color:var(--deep)}
+  .bars{display:flex;align-items:flex-end;gap:14px;height:130px;padding:10px 4px 0}
+  .bar{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end}
+  .bar .fill{width:70%;border-radius:7px 7px 3px 3px;background:var(--deep);animation:grow .8s ease}
+  .bar .fill.gold{background:var(--gold)}
+  .bar small{font-size:10px;color:var(--muted)}
+  @keyframes grow{from{height:0}}
+  .list{display:flex;flex-direction:column;gap:10px}
+  .row{background:#fff;border:1px solid rgba(32,42,38,.07);border-radius:16px;padding:12px 14px;
+    display:flex;align-items:center;gap:12px;cursor:pointer}
+  .row:hover{border-color:rgba(11,81,59,.35)}
+  .row .ic{width:38px;height:38px;border-radius:50%;background:rgba(11,81,59,.1);display:grid;place-items:center;font-size:18px;flex:0 0 auto}
+  .row .t{font-weight:700;font-size:14px}
+  .row .s{font-size:12px;color:var(--muted)}
+  .row .chev{margin-left:auto;color:#9db3a8}
+  .pill{font-size:10px;font-weight:800;padding:4px 9px;border-radius:999px;background:rgba(11,81,59,.12);color:var(--deep)}
+  .pill.gold{background:rgba(213,160,68,.2);color:#8a6414}
+  .pill.red{background:rgba(183,28,28,.12);color:#b71c1c}
+  .darkcard{background:var(--forest);color:#fff;border-radius:var(--radius);padding:18px}
+  .darkcard .big{font-size:26px;font-weight:800;margin:4px 0}
+  .poster{width:100%;border-radius:18px;display:block;box-shadow:0 12px 30px rgba(7,61,45,.25)}
+  .fab-note{font-size:12px;color:#cfe0d6;text-align:center;margin-top:16px;max-width:520px}
+  /* spreadsheet */
+  table.sheet{border-collapse:collapse;width:100%;font-size:12.5px;background:#fff;border-radius:12px;overflow:hidden}
+  table.sheet th,table.sheet td{border:1px solid #e3e6e1;padding:7px 8px;text-align:left;white-space:nowrap}
+  table.sheet th{background:var(--ivory);font-weight:800}
+  table.sheet td.fx{background:rgba(213,160,68,.16);font-weight:700}
+  .fxbar{background:#fff;border:1px solid rgba(32,42,38,.1);border-radius:12px;padding:9px 12px;font-size:13px;margin-bottom:10px}
+  .fxbar b{color:var(--deep)}
+  /* kanban */
+  .kanban{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+  .kcol{background:var(--grey);border-radius:14px;padding:8px;min-height:120px}
+  .kcol h4{margin:2px 2px 8px;font-size:11px}
+  .kcard{background:#fff;border-radius:10px;padding:8px;font-size:11.5px;font-weight:600;margin-bottom:8px;box-shadow:0 2px 6px rgba(0,0,0,.06)}
+  /* bottom nav */
+  .tabbar{background:#fff;border-top:1px solid rgba(32,42,38,.09);display:flex;padding:8px 6px calc(10px + env(safe-area-inset-bottom))}
+  .tab{flex:1;background:none;border:0;display:flex;flex-direction:column;align-items:center;gap:2px;
+    font-size:11px;font-weight:600;color:var(--muted);cursor:pointer;padding:4px 0}
+  .tab .ti{font-size:21px;line-height:1}
+  .tab.active{color:var(--forest)}
+  .tab.active .ti{transform:translateY(-1px)}
+  .tab.create .ti{font-size:27px;color:var(--deep)}
+  /* create sheet */
+  .sheetwrap{position:absolute;inset:0;background:rgba(7,30,22,.5);display:none;align-items:flex-end;z-index:5}
+  .sheetwrap.open{display:flex}
+  .sheetbox{background:var(--ivory);width:100%;border-radius:24px 24px 0 0;padding:18px;animation:up .25s ease}
+  @keyframes up{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
+  .create-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:12px}
+  .create-item{text-align:center;cursor:pointer;background:none;border:0;font-family:inherit}
+  .create-item .ic{width:56px;height:56px;margin:0 auto 6px;border-radius:16px;background:rgba(11,81,59,.1);display:grid;place-items:center;font-size:25px}
+  .create-item span{font-size:12px;font-weight:600}
+  .toast{position:absolute;left:50%;bottom:96px;transform:translateX(-50%) translateY(20px);background:var(--forest);
+    color:#fff;padding:10px 16px;border-radius:999px;font-size:13px;font-weight:600;opacity:0;pointer-events:none;transition:.3s;z-index:9;white-space:nowrap}
+  .toast.show{opacity:1;transform:translateX(-50%)}
+  footer{color:#7fa08d;font-size:12px;text-align:center;margin-top:22px;line-height:1.7}
+  footer a{color:var(--gold)}
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="stage-head">
+    <h1>ORBITAL <span>OFFICE</span></h1>
+    <p>Work Smarter. Create Better. — by ORBITAL.STUDIO.3 · Ideas Into Impact.</p>
+    <div class="badge">INTERACTIVE PREVIEW · DEMO DATA · TAP AROUND 👆</div>
+  </div>
+
+  <div class="phone">
+    <div class="statusbar"><span>9:41</span><span>ORBITAL&nbsp;OFFICE</span><span>5G ▰▰▰</span></div>
+    <div class="appbar">
+      <div class="logo"><div class="o"></div><i></i><i></i><i></i></div>
+      <b>ORBITAL OFFICE</b><div class="sp"></div>
+      <button class="iconbtn" onclick="go('profile')" aria-label="Notifications">🔔<span class="dot">2</span></button>
+      <button class="iconbtn" onclick="go('ai')" aria-label="AI Assistant">🤖</button>
+    </div>
+
+    <div class="screens" id="screens">
+
+      <!-- ================= HOME ================= -->
+      <section class="screen active" id="s-home">
+        <div class="demo-banner">◆ DEMO WORKSPACE — sample data, stored on this device only</div>
+        <h2 class="greet">Good morning, Demo 👋</h2>
+        <div class="sub" id="today"></div>
+
+        <div class="sect"><h3>Your workspace</h3><button onclick="toast('Drag cards to customise — in the real app')">Customise</button></div>
+        <div class="grid2">
+          <div class="card stat tap" onclick="go('docs')"><div class="ic">📄</div><div class="v">2</div><div class="l">Documents</div></div>
+          <div class="card stat tap" onclick="go('sheet')"><div class="ic">▦</div><div class="v">1</div><div class="l">Spreadsheets</div></div>
+          <div class="card stat tap" onclick="go('projects')"><div class="ic">🗂️</div><div class="v">2</div><div class="l">Active Projects</div></div>
+          <div class="card stat tap" onclick="go('projects')"><div class="ic">✅</div><div class="v">4</div><div class="l">Pending Tasks</div></div>
+          <div class="card stat tap" onclick="go('business')"><div class="ic">👥</div><div class="v">4</div><div class="l">Customers</div></div>
+          <div class="card stat tap" onclick="go('invoices')"><div class="ic">💼</div><div class="v">₹20,320</div><div class="l">Outstanding</div></div>
+        </div>
+
+        <div class="sect"><h3>Quick create</h3></div>
+        <div class="chips">
+          <button class="chip" onclick="go('docs')">📄 Document</button>
+          <button class="chip" onclick="go('sheet')">▦ Spreadsheet</button>
+          <button class="chip" onclick="go('deck')">🖥️ Presentation</button>
+          <button class="chip" onclick="go('invoices')">🧾 Invoice</button>
+          <button class="chip" onclick="go('business')">👤 Customer</button>
+          <button class="chip" onclick="go('projects')">🗂️ Project</button>
+        </div>
+
+        <div class="sect"><h3>Business analytics</h3></div>
+        <div class="card">
+          <b style="font-size:13px">Invoice totals (₹)</b>
+          <div class="sub">Collected ₹10,000 · Outstanding ₹20,320</div>
+          <div class="bars">
+            <div class="bar"><div class="fill" style="height:88%"></div><small>1001</small></div>
+            <div class="bar"><div class="fill gold" style="height:38%"></div><small>1002</small></div>
+            <div class="bar"><div class="fill gold" style="height:12%"></div><small>1003</small></div>
+          </div>
+          <div class="sub" style="margin-top:6px"><span class="pill">■ Paid</span>&nbsp;<span class="pill gold">■ Pending</span></div>
+        </div>
+
+        <div class="sect"><h3>Recent files</h3><button onclick="go('workspace')">All files</button></div>
+        <div class="list">
+          <div class="row" onclick="go('docs')"><div class="ic">📄</div><div><div class="t">Welcome to ORBITAL OFFICE.docx</div><div class="s">Edited just now</div></div><div class="chev">›</div></div>
+          <div class="row" onclick="go('sheet')"><div class="ic">▦</div><div><div class="t">Sales Tracker (Demo).xlsx</div><div class="s">Edited 2h ago</div></div><div class="chev">›</div></div>
+          <div class="row" onclick="go('deck')"><div class="ic">🖥️</div><div><div class="t">ORBITAL Pitch Deck (Demo).pptx</div><div class="s">Edited yesterday</div></div><div class="chev">›</div></div>
+          <div class="row" onclick="go('invoices')"><div class="ic">🧾</div><div><div class="t">INV-1001.pdf</div><div class="s">Edited 2 days ago</div></div><div class="chev">›</div></div>
+        </div>
+
+        <div class="sect"><h3>Recent activity</h3></div>
+        <div class="list">
+          <div class="row" onclick="this.querySelector('.t').style.textDecoration='line-through';toast('Task completed ✓')"><div class="ic">⬜</div><div><div class="t">Design Diwali poster set</div><div class="s">High priority · Due in 2 days</div></div></div>
+          <div class="row" onclick="this.querySelector('.t').style.textDecoration='line-through';toast('Task completed ✓')"><div class="ic">⬜</div><div><div class="t">Send INV-1001 payment reminder</div><div class="s">Medium priority · Due today</div></div></div>
+        </div>
+      </section>
+
+      <!-- ================= WORKSPACE ================= -->
+      <section class="screen" id="s-workspace">
+        <div class="demo-banner">◆ DEMO WORKSPACE — sample data</div>
+        <div class="sect" style="margin-top:4px"><h3>Office modules</h3></div>
+        <div class="grid2">
+          <div class="card tap" onclick="go('docs')"><div style="font-size:26px">📄</div><b>Documents</b><div class="sub">2 files</div></div>
+          <div class="card tap" onclick="go('sheet')"><div style="font-size:26px">▦</div><b>Spreadsheets</b><div class="sub">1 file · live formulas</div></div>
+          <div class="card tap" onclick="go('deck')"><div style="font-size:26px">🖥️</div><b>Presentations</b><div class="sub">1 deck</div></div>
+          <div class="card tap" onclick="toast('16 ORBITAL templates — Business, Finance, Marketing…')"><div style="font-size:26px">✦</div><b>Templates</b><div class="sub">16 ORBITAL templates</div></div>
+          <div class="card tap" onclick="go('workspace')"><div style="font-size:26px">📁</div><b>File Manager</b><div class="sub">5 files</div></div>
+          <div class="card tap" onclick="go('ai')"><div style="font-size:26px">🤖</div><b>AI Assistant</b><div class="sub">Draft &amp; summarise</div></div>
+        </div>
+        <div class="sect"><h3>From the studio</h3></div>
+        <img class="poster" src="../orbital_office/assets/branding/orbital_poster.png" alt="ORBITAL.STUDIO.3 — Ideas Into Impact">
+        <p class="sub" style="text-align:center;margin-top:10px">ORBITAL.STUDIO.3 · Graphic Design · Product Advertising · AI Video · Websites · Digital Office</p>
+      </section>
+
+      <!-- ================= DOCS ================= -->
+      <section class="screen" id="s-docs">
+        <div class="sect" style="margin-top:4px"><h3>Documents</h3><button onclick="toast('New document created (preview)')">＋ New</button></div>
+        <div class="list">
+          <div class="row" onclick="toast('Block editor: headings, bullets, tables, undo/redo, PDF export')"><div class="ic">📄</div><div><div class="t">Welcome to ORBITAL OFFICE</div><div class="s">48 words · just now</div></div><span class="pill">DOCX</span></div>
+          <div class="row" onclick="toast('Block editor: headings, bullets, tables, undo/redo, PDF export')"><div class="ic">📄</div><div><div class="t">Client Proposal — Priya Sharma Retail</div><div class="s">Store Branding · yesterday</div></div><span class="pill">DOCX</span></div>
+        </div>
+        <div class="sect"><h3>Inside the editor</h3></div>
+        <div class="card">
+          <h2 style="margin:0 0 6px;font-size:19px">Ideas Into Impact.</h2>
+          <p class="sub" style="font-size:13.5px;line-height:1.6">Create documents, spreadsheets, presentations and invoices — everything works offline.</p>
+          <p style="font-size:13.5px;line-height:1.8">• Write proposals, reports and letters<br>• Track sales with live formulas<br>• Send professional invoices in INR</p>
+          <div class="chips" style="margin-top:10px">
+            <button class="chip" onclick="toast('Heading block added')">H Heading</button>
+            <button class="chip" onclick="toast('Bullet list added')">☰ Bullets</button>
+            <button class="chip" onclick="toast('Table added')">▦ Table</button>
+            <button class="chip" onclick="toast('Exporting PDF… (real app)')">⬇ PDF</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= SHEET ================= -->
+      <section class="screen" id="s-sheet">
+        <div class="sect" style="margin-top:4px"><h3>Sales Tracker (Demo)</h3><button onclick="toast('CSV / XLSX export — in the real app')">⬇ Export</button></div>
+        <div class="fxbar"><b>E6</b>&nbsp; fx&nbsp; <span id="fxtext">=SUM(E2:E4)</span> &nbsp;→&nbsp; <b id="fxresult">₹89,995</b></div>
+        <div style="overflow-x:auto">
+        <table class="sheet">
+          <tr><th></th><th>Date</th><th>Product</th><th>Units</th><th>Price ₹</th><th>Revenue ₹</th></tr>
+          <tr><th>2</th><td>01 Nov</td><td>Branding Package</td><td>2</td><td>15,000</td><td class="fx">30,000</td></tr>
+          <tr><th>3</th><td>02 Nov</td><td>Social Media Kit</td><td>5</td><td>4,999</td><td class="fx">24,995</td></tr>
+          <tr><th>4</th><td>03 Nov</td><td>Website Design</td><td>1</td><td>35,000</td><td class="fx">35,000</td></tr>
+          <tr><th>6</th><td colspan="4"><b>TOTAL</b> &nbsp;<span class="sub">=SUM(E2:E4)</span></td><td class="fx">₹89,995</td></tr>
+          <tr><th>7</th><td colspan="4"><b>AVERAGE</b> &nbsp;<span class="sub">=AVERAGE(E2:E4)</span></td><td class="fx">₹29,998</td></tr>
+        </table>
+        </div>
+        <p class="sub" style="margin-top:10px">✓ Real formula engine — not text fields · ✓ Circular references show #CYCLE! · ✓ Dependents recalculate · SUM · AVERAGE · COUNT · MIN · MAX · IF</p>
+        <div class="chips">
+          <button class="chip" onclick="toast('Column chart — FL Chart in the real app')">📊 Chart</button>
+          <button class="chip" onclick="toast('Sorted by Revenue ↓')">↕ Sort</button>
+          <button class="chip" onclick="toast('Filter rows…')">⧩ Filter</button>
+        </div>
+      </section>
+
+      <!-- ================= DECK ================= -->
+      <section class="screen" id="s-deck">
+        <div class="sect" style="margin-top:4px"><h3>ORBITAL Pitch Deck</h3><button onclick="toast('Present mode ▶ — in the real app')">▶ Present</button></div>
+        <div class="card" style="background:var(--forest);color:#fff;aspect-ratio:16/9;display:flex;flex-direction:column;justify-content:center">
+          <div style="font-size:24px;font-weight:800">IDEAS INTO<br>IMPACT<span style="color:var(--gold)">.</span></div>
+          <div style="color:#cfe0d6;font-size:13px;margin-top:8px">Creative Design. Smart Digital Solutions.</div>
+        </div>
+        <div class="sect"><h3>Slides</h3></div>
+        <div class="grid3">
+          <div class="card tap" style="font-size:12px;font-weight:700" onclick="toast('Slide 1 — Title')">1 · Ideas Into Impact.</div>
+          <div class="card tap" style="font-size:12px;font-weight:700" onclick="toast('Slide 2 — Our Services')">2 · Our Services</div>
+          <div class="card tap" style="font-size:12px;font-weight:700;background:var(--gold)" onclick="toast('Slide 3 — Call to action')">3 · Let's Create…</div>
+        </div>
+        <p class="sub" style="margin-top:10px">Add · duplicate · drag-reorder · delete slides · 6 backgrounds · export PDF</p>
+      </section>
+
+      <!-- ================= BUSINESS ================= -->
+      <section class="screen" id="s-business">
+        <div class="demo-banner">◆ DEMO WORKSPACE — sample data</div>
+        <div class="sect" style="margin-top:4px"><h3>Business</h3></div>
+        <div class="list">
+          <div class="row" onclick="go('invoices')"><div class="ic">🧾</div><div><div class="t">Invoices</div><div class="s">2 invoices</div></div><div class="chev">›</div></div>
+          <div class="row" onclick="go('invoices')"><div class="ic">📋</div><div><div class="t">Quotations</div><div class="s">1 quotation</div></div><div class="chev">›</div></div>
+          <div class="row" onclick="toast('CRM pipeline: New → Contacted → Interested → Quotation Sent → Converted')"><div class="ic">👥</div><div><div class="t">Customers (CRM)</div><div class="s">4 customers · 1 converted</div></div><div class="chev">›</div></div>
+          <div class="row" onclick="toast('⚠ Low stock: A5 Brand Notebooks — 4 left')"><div class="ic">📦</div><div><div class="t">Inventory</div><div class="s">4 products · 1 low stock</div></div><span class="pill red">LOW STOCK</span></div>
+          <div class="row" onclick="go('projects')"><div class="ic">🗂️</div><div><div class="t">Projects</div><div class="s">2 projects</div></div><div class="chev">›</div></div>
+          <div class="row" onclick="go('projects')"><div class="ic">✅</div><div><div class="t">Tasks</div><div class="s">4 pending</div></div><div class="chev">›</div></div>
+        </div>
+        <div style="height:14px"></div>
+        <div class="darkcard">
+          <div style="color:#cfe0d6;font-size:13px">Outstanding balance</div>
+          <div class="big">₹20,320.00</div>
+          <div style="color:var(--gold);font-size:12px">1 overdue invoice(s)</div>
+        </div>
+      </section>
+
+      <!-- ================= INVOICES ================= -->
+      <section class="screen" id="s-invoices">
+        <div class="sect" style="margin-top:4px"><h3>Invoices</h3><button onclick="toast('New invoice (preview)')">＋ New</button></div>
+        <div class="list">
+          <div class="row" onclick="toast('PDF invoice — Print / Share from the editor')"><div class="ic">🧾</div><div><div class="t">INV-1001 · Priya Sharma Retail</div><div class="s">₹30,680 · ₹10,000 paid</div></div><span class="pill gold">PARTIAL</span></div>
+          <div class="row" onclick="toast('PDF invoice — Print / Share from the editor')"><div class="ic">🧾</div><div><div class="t">INV-1002 · Deshmukh Electronics</div><div class="s">₹12,000 · due in 3 days</div></div><span class="pill gold">UNPAID</span></div>
+          <div class="row" onclick="toast('Quotation → convert to invoice in one tap')"><div class="ic">📋</div><div><div class="t">QUO-1001 · FreshMart Stores</div><div class="s">₹35,000 · Website design</div></div><span class="pill">QUOTE</span></div>
+        </div>
+        <div class="sect"><h3>INV-1001 totals</h3></div>
+        <div class="card" style="line-height:2;font-size:14px">
+          <div style="display:flex;justify-content:space-between"><span>Subtotal</span><b>₹26,000</b></div>
+          <div style="display:flex;justify-content:space-between"><span>GST (18%) — configurable</span><b>₹4,680</b></div>
+          <div style="display:flex;justify-content:space-between;border-top:2px solid var(--gold);margin-top:6px;padding-top:6px"><span><b>Grand Total</b></span><b>₹30,680</b></div>
+          <div style="display:flex;justify-content:space-between"><span>Balance due</span><b>₹20,680</b></div>
+          <button class="chip" style="margin-top:10px;background:var(--forest);color:#fff;border:0" onclick="toast('Opening print-ready A4 PDF…')">🧾 Print / Share PDF</button>
+        </div>
+        <p class="sub" style="margin-top:8px">Tax label &amp; rate are fully configurable — ORBITAL never assumes your tax registration.</p>
+      </section>
+
+      <!-- ================= PROJECTS ================= -->
+      <section class="screen" id="s-projects">
+        <div class="sect" style="margin-top:4px"><h3>Projects &amp; Tasks</h3><button onclick="toast('New project (preview)')">＋ New</button></div>
+        <div class="card">
+          <b>Priya Sharma Retail — Festive Campaign</b>
+          <div class="sub">Deadline in 9 days · 2 tasks</div>
+          <div style="background:var(--grey);border-radius:99px;height:9px;margin:10px 0 6px"><div style="width:50%;height:100%;background:var(--deep);border-radius:99px"></div></div>
+          <div class="sub">50% complete</div>
+        </div>
+        <div style="height:12px"></div>
+        <div class="card">
+          <b>FreshMart Website</b>
+          <div class="sub">Deadline in 21 days · 2 tasks</div>
+          <div style="background:var(--grey);border-radius:99px;height:9px;margin:10px 0 6px"><div style="width:50%;height:100%;background:var(--gold);border-radius:99px"></div></div>
+          <div class="sub">50% complete</div>
+        </div>
+        <div class="sect"><h3>Kanban</h3></div>
+        <div class="kanban">
+          <div class="kcol"><h4>TO DO</h4><div class="kcard">Homepage wireframe<br><span class="pill red">HIGH</span></div><div class="kcard">Client approval on logos</div></div>
+          <div class="kcol"><h4>IN PROGRESS</h4><div class="kcard">Design Diwali poster set<br><span class="pill red">HIGH</span></div></div>
+          <div class="kcol"><h4>DONE</h4><div class="kcard" style="text-decoration:line-through;color:var(--muted)">Collect product photos</div></div>
+        </div>
+      </section>
+
+      <!-- ================= AI ================= -->
+      <section class="screen" id="s-ai">
+        <div class="demo-banner">🤖 Demo AI mode — template drafts on-device. Not verified; review before use.</div>
+        <div class="card" style="background:var(--forest);color:#fff">
+          <b>ORBITAL AI</b>
+          <p style="font-size:13.5px;line-height:1.6;margin:8px 0 0">Subject: Follow-up on our recent conversation<br><br>Dear Customer,<br>Thank you for your time and interest in our services. As discussed, we are sharing the next steps…<br><br>Warm regards,<br>ORBITAL OFFICE</p>
+          <div style="margin-top:10px;display:flex;gap:8px">
+            <button class="chip" onclick="toast('Copied to clipboard')">⧉ Copy</button>
+            <button class="chip" onclick="go('docs')">Insert into document</button>
+          </div>
+        </div>
+        <div class="sect"><h3>Try asking</h3></div>
+        <div class="chips">
+          <button class="chip" onclick="toast('Drafting a business letter…')">✉️ Business letter</button>
+          <button class="chip" onclick="toast('Creating a proposal outline…')">📑 Proposal outline</button>
+          <button class="chip" onclick="toast('Generating a task list…')">✅ Task list for a launch</button>
+          <button class="chip" onclick="toast('Writing invoice descriptions…')">🧾 Invoice descriptions</button>
+        </div>
+      </section>
+
+      <!-- ================= PROFILE ================= -->
+      <section class="screen" id="s-profile">
+        <div class="card" style="display:flex;gap:14px;align-items:center">
+          <div style="width:58px;height:58px;border-radius:50%;background:var(--forest);color:#fff;display:grid;place-items:center;font-size:20px;font-weight:800">DU</div>
+          <div><b style="font-size:16px">Demo User</b><div class="sub">demo@orbital.studio</div><div class="sub">ORBITAL.STUDIO.3 (Demo)</div></div>
+          <span class="pill gold" style="margin-left:auto">DEMO</span>
+        </div>
+        <div class="sect"><h3>Workspace summary</h3></div>
+        <div class="card" style="line-height:2.1;font-size:14px">
+          <div style="display:flex;justify-content:space-between"><span>Documents</span><b>2</b></div>
+          <div style="display:flex;justify-content:space-between"><span>Spreadsheets</span><b>1</b></div>
+          <div style="display:flex;justify-content:space-between"><span>Customers</span><b>4</b></div>
+          <div style="display:flex;justify-content:space-between"><span>Collected revenue</span><b>₹10,000</b></div>
+          <div style="display:flex;justify-content:space-between"><span>Outstanding</span><b>₹20,320</b></div>
+        </div>
+        <div class="sect"><h3>Notifications</h3></div>
+        <div class="list">
+          <div class="row"><div class="ic">🔔</div><div><div class="t">Welcome to ORBITAL OFFICE</div><div class="s">Everything works offline · just now</div></div></div>
+          <div class="row" onclick="go('business')"><div class="ic">⚠️</div><div><div class="t">Low stock alert</div><div class="s">A5 Brand Notebooks — only 4 left · 1d ago</div></div></div>
+        </div>
+        <div class="sect"><h3>Settings</h3></div>
+        <div class="chips">
+          <button class="chip" onclick="toast('Theme: System / Light / Dark')">🎨 Theme</button>
+          <button class="chip" onclick="toast('Demo mode — data stored on this device only')">☁️ Sync now</button>
+          <button class="chip" onclick="toast('Exporting workspace JSON…')">⬇ Export my data</button>
+        </div>
+        <p class="sub" style="text-align:center;margin-top:22px;line-height:1.8">ORBITAL OFFICE · BY ORBITAL.STUDIO.3<br><b>Work Smarter. Create Better.</b><br>@orbital.studio.3</p>
+      </section>
+    </div>
+
+    <!-- create sheet -->
+    <div class="sheetwrap" id="createSheet" onclick="if(event.target===this)closeSheet()">
+      <div class="sheetbox">
+        <b style="font-size:16px">Create something exceptional ✨</b>
+        <div class="create-grid">
+          <button class="create-item" onclick="closeSheet();go('docs')"><span class="ic">📄</span><span>Document</span></button>
+          <button class="create-item" onclick="closeSheet();go('sheet')"><span class="ic">▦</span><span>Spreadsheet</span></button>
+          <button class="create-item" onclick="closeSheet();go('deck')"><span class="ic">🖥️</span><span>Presentation</span></button>
+          <button class="create-item" onclick="closeSheet();go('invoices')"><span class="ic">🧾</span><span>Invoice</span></button>
+          <button class="create-item" onclick="closeSheet();go('invoices')"><span class="ic">📋</span><span>Quotation</span></button>
+          <button class="create-item" onclick="closeSheet();go('projects')"><span class="ic">🗂️</span><span>Project</span></button>
+        </div>
+      </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <nav class="tabbar">
+      <button class="tab active" data-tab="home" onclick="go('home')"><span class="ti">🏠</span>Home</button>
+      <button class="tab" data-tab="workspace" onclick="go('workspace')"><span class="ti">🧭</span>Workspace</button>
+      <button class="tab create" onclick="openSheet()"><span class="ti">⊕</span>Create</button>
+      <button class="tab" data-tab="business" onclick="go('business')"><span class="ti">💼</span>Business</button>
+      <button class="tab" data-tab="profile" onclick="go('profile')"><span class="ti">👤</span>Profile</button>
+    </nav>
+  </div>
+
+  <p class="fab-note">This is a <b>visual preview</b> of the Flutter app with demo data — the real ORBITAL OFFICE app (code in <b>orbital_office/</b>) has fully working editors, formulas, invoices, offline storage and Supabase sync. Build it with the steps in <b>orbital_office/docs/BUILD.md</b>.</p>
+  <footer>ORBITAL OFFICE · ORBITAL.STUDIO.3 · Your Vision. Our Creativity.<br>Full source &amp; docs in this repo under <b>orbital_office/</b></footer>
+</div>
+
+<script>
+  document.getElementById('today').textContent =
+    new Date().toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  var tabFor = {home:'home',workspace:'workspace',docs:'workspace',sheet:'workspace',deck:'workspace',ai:'workspace',
+                business:'business',invoices:'business',projects:'business',profile:'profile'};
+  function go(id){
+    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+    document.getElementById('s-'+id).classList.add('active');
+    document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active', t.dataset.tab===tabFor[id]));
+    document.getElementById('screens').scrollTop = 0;
+  }
+  function openSheet(){ document.getElementById('createSheet').classList.add('open'); }
+  function closeSheet(){ document.getElementById('createSheet').classList.remove('open'); }
+  var toastTimer;
+  function toast(msg){
+    var t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show');
+    clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('show'),2200);
+  }
+</script>
+</body>
+</html>
